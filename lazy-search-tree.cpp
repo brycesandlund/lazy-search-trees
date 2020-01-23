@@ -1,6 +1,7 @@
 #include "splay.cpp"
 #include <vector>
 #include <list>
+#include <algorithm>
 
 #ifndef LAZY_SEARCH_TREE
 #define LAZY_SEARCH_TREE
@@ -53,6 +54,11 @@ private:
       interval(T element) {
         insert(element);
       }
+      
+      // compare gaps to one another via their maximum element.
+      bool operator < (const interval& other) const {
+        return max_element < other.max_element;
+      }
     };
     
     // the sorted set of intervals within this gap; all elements in intervals[i] <= intervals[i+1].
@@ -68,12 +74,20 @@ private:
     
     // compare gaps to one another via their maximum element.
     bool operator < (const gap& other) const {
-      return intervals.back().max_element < other.intervals.back().max_element;
+      return intervals.back() < other.intervals.back();
     }
     
     // insert the element into this gap.
     void insert(T key) {
-      
+      interval test_int(key);
+      // can't get vector<interval>::iterator lb to compile.
+      // could switch to more intelligent method to remove O(log log n) factor to
+      // O(1) in average case.
+      auto lb = lower_bound(intervals.begin(), intervals.end(), test_int);
+      if (lb == intervals.end()) {
+        --lb;
+      }
+      lb->insert(key);
     }
   };
   
