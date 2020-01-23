@@ -7,7 +7,7 @@
 
 template<typename T, typename Comp = std::less<T>>
 class splay_tree {
-public:
+private:
   Comp comp;
   unsigned long p_size;
 
@@ -21,6 +21,7 @@ public:
     }
   } *root;
 
+  // these two functions should be replacable with a single rotate-with-parent function
   void left_rotate( node *x ) {
     node *y = x->right;
     if(y) {
@@ -87,18 +88,38 @@ public:
     while( u->right ) u = u->right;
     return u;
   }
-
-  node* find( const T &key ) {
+  
+  // returns the smallest node that compares >= key, or the largest node
+  // if no larger node exists. Returns null on an empty tree.
+  node* find_or_successor(const T &key) {
     node *z = root;
-    while( z ) {
-      if( comp( z->key, key ) ) z = z->right;
-      else if( comp( key, z->key ) ) z = z->left;
-      else return z;
+    node *last;
+    node *ret;
+    while (z) {
+      last = z;
+      if (comp(z->key, key)) z = z->right;
+      else if (comp(key, z->key)) {
+        ret = z;  // update successor
+        z = z->left;
+      } else {
+        ret = z;  // found exact match
+        break;
+      }
     }
-    return nullptr;
+    if (!ret) ret = last;
+    splay(ret);
+    return ret;
   }
   
-//public:
+  // returns the node containing key, if such a node exists, and returns
+  // null otherwise.
+  node* find(const T &key) {
+    node* z = find_or_successor(key);
+    if (z && !comp(z->key, key) && !comp(key, z->key)) z = nullptr;
+    return z;
+  }
+  
+public:
   splay_tree( ) : root( nullptr ), p_size( 0 ) { }
 
   void insert( const T &key ) {
@@ -126,8 +147,6 @@ public:
     node *z = find( key );
     if( !z ) return;
 
-    splay( z );
-
     if( !z->left ) replace( z, z->right );
     else if( !z->right ) replace( z, z->left );
     else {
@@ -150,9 +169,20 @@ public:
     node *z = find(key);
     if (!z) return false;
 
-    splay(z);
     return true;
   }
+  
+  // returns the smallest key that compares >= key, or the largest node
+  // if no other node exists. Bad things happen if the tree is empty.
+  T successor_or_equal(const T &key) {
+    node *ret = find_or_successor(key);
+    return ret->key;
+  }
+  
+ /* // returns the key of the root. Bad things happen if the tree is empty.
+  T get_root() {
+    return root->key;
+  }*/
 
   const T& minimum( ) { return subtree_minimum( root )->key; }
   const T& maximum( ) { return subtree_maximum( root )->key; }

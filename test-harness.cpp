@@ -5,8 +5,6 @@
 using namespace std;
 
 int main() {
-  splay_tree<int> tree;
-  tree.insert(8);
-  tree.insert(10);
-  cout << tree.root->left->key << endl;
+  lazy_search_tree<int> lst;
+  lst.insert(3);
 }

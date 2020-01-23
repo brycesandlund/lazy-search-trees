@@ -14,6 +14,7 @@ private:
   unsigned long p_size;
   
   // data structure that contains a set of intervals within a gap.
+  // a gap should never be empty.
   struct gap {
     // an interval within a gap.
     struct interval {
@@ -25,8 +26,10 @@ private:
       // number of pointers in the entire data structure to O(min(n, q log n)).
       list<vector<T>> elements;
       
-      void merge(interval other) {
+      // merges 'other' into this interval, destroying 'other'.
+      void merge(interval &other) {
         int_size += other.int_size;
+        max_element = max(max_element, other.max_element);
         
         // may want to make this conditional so that the interval is loosely structured in order, that
         // is, if other other is a left side interval, do as below, otherwise, add the elements to the
@@ -34,13 +37,17 @@ private:
         elements.splice(elements.end(), other);
       }
       
+      // insert an element into this interval.
       void insert(T element) {
         ++int_size;
         if (elements.empty()) {   // could also initilize intervals to a single element list with
                                   // one empty vector. Can try both and choose better performer.
           elements.emplace_back(vector<T>());
+          max_element = element;
         }
-        elements.front().emplace_back(element);
+        elements.front().emplace_back(element); // doesn't actually matter which vector the element
+                                                // is placed into.
+        max_element = max(max_element, element);
       }
       
       interval(T element) {
@@ -51,15 +58,23 @@ private:
     // the sorted set of intervals within this gap; all elements in intervals[i] <= intervals[i+1].
     vector<interval> intervals;
     
+    // initialize a gap with a vector of intervals.
     gap(vector<interval> intervals) : intervals(intervals) {}
     
+    // create a gap with a single interval containing a single element.
     gap(T key) {
       intervals.emplace_back(interval(key));
     }
     
-  /*  bool operator < (const gap& other) const {
-      return intervals.back().max_element
-    }*/
+    // compare gaps to one another via their maximum element.
+    bool operator < (const gap& other) const {
+      return intervals.back().max_element < other.intervals.back().max_element;
+    }
+    
+    // insert the element into this gap.
+    void insert(T key) {
+      
+    }
   };
   
   splay_tree<gap> gap_ds;
@@ -68,8 +83,16 @@ public:
   lazy_search_tree() : p_size(0) {}
   
   void insert(const T &key) {
-  
+    if (empty()) {
+      gap r_gap = gap(key);
+      gap_ds.insert(r_gap);
+    } else {
+      gap r_gap = gap_ds.successor_or_equal(gap(key));
+    }
   }
+  
+  unsigned long size( ) const { return p_size; }
+  bool empty( ) const { return size() == 0; }
 };
 
 #endif // LAZY_SEARCH_TREE
