@@ -93,8 +93,8 @@ private:
   // if no larger node exists. Returns null on an empty tree.
   node* find_or_successor(const T &key) {
     node *z = root;
-    node *last;
-    node *ret;
+    node *last = nullptr;
+    node *ret = nullptr;
     while (z) {
       last = z;
       if (comp(z->key, key)) z = z->right;
@@ -106,8 +106,8 @@ private:
         break;
       }
     }
-    if (!ret) ret = last;
-    splay(ret);
+    if (!ret) { ret = last; }
+    if (!ret) { splay(ret); }
     return ret;
   }
   
@@ -174,7 +174,7 @@ public:
   
   // returns the smallest key that compares >= key, or the largest node
   // if no other node exists. Bad things happen if the tree is empty.
-  T successor_or_equal(const T &key) {
+  T& successor_or_equal(const T &key) {
     node *ret = find_or_successor(key);
     return ret->key;
   }
