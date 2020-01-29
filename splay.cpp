@@ -1,9 +1,9 @@
 // Taken from wikipedia: https://en.wikipedia.org/wiki/Splay_tree
 
-#include <functional>
-
 #ifndef SPLAY_TREE
 #define SPLAY_TREE
+
+#include <functional>
 
 template<typename T, typename Comp = std::less<T>>
 class splay_tree {
