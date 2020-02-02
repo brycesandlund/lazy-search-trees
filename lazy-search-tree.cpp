@@ -43,7 +43,7 @@ private:
         // may want to make this conditional so that the interval is loosely structured in order, that
         // is, if other is a left side interval, do as below, otherwise, add the elements to the
         // beginning, not end.
-        elements.splice(elements.end(), other);
+        elements.splice(elements.end(), other.elements);
       }
       
       // insert an element into this interval.
@@ -89,6 +89,7 @@ private:
           }
           idx -= vec.size();
         }
+        return T();
       }
       
       // pick the pivot element to split the interval. Currently, this picks the median of
@@ -126,7 +127,7 @@ private:
           return vector<interval>();
         } else if (size() == 1) {
           vector<interval> temp;
-          temp.push_back(this);
+          temp.emplace_back(*this);
           return temp;
         }
         
@@ -136,7 +137,7 @@ private:
         // TODO: also, I guarantee this can be made faster; investigate.
         vector<T> lesser, greater;
         while (true) {
-          T p = pick_pivot(min(5, size())); // expected 1.72 iterations of loop
+          T p = pick_pivot(min(5UL, size())); // expected 1.72 iterations of loop
           pair<vector<T>, vector<T>> result_split = pivot(p);
           lesser = result_split.first;
           greater = result_split.second;
@@ -209,14 +210,14 @@ private:
     
     // insert key into this gap.
     void insert(T key) {
-      intervals[getInterval(key)].insert(key);
+      intervals[getIntervalIdx(key)].insert(key);
       ++gap_size;
     }
     
     // query for membership of key in this gap. Note: this only answers the query. Restructuring
     // is done in the restructure method.
     bool membership(T key) {
-      return intervals[getInterval(key)].membership(key);
+      return intervals[getIntervalIdx(key)].membership(key);
     }
     
     // returns the number of elements left of this interval. Note: runs in O(number of intervals)
@@ -239,7 +240,7 @@ private:
     
     // restructure the gap so that all elements in gap <= key remain in the gap and a new gap
     // is created with elements > key. TODO: replace with more general function.
-    gap& restructure(T key) {
+    gap restructure(T key) {
       int int_idx = getIntervalIdx(key);
       pair<vector<T>, vector<T>> result = intervals[int_idx].pivot(key);
       vector<interval> left_result = interval(result.first).split(false);
@@ -277,7 +278,7 @@ private:
     }
     
     
-    struct index_removal {
+    /*struct index_removal {
       vector<int> indices_to_remove;
       int idx;
       
@@ -290,15 +291,16 @@ private:
         }
         return false;
       }
-    };
+    };*/
     
     // rebalance according to (A) and (B).
     void rebalance() {
-      vector<int> left_indices;
+      vector<interval> left_intervals;
       // rebalance left side intervals
       int n_left = 0;
       for (int i = 0; i < intervals.size()-1; ++i) {
         n_left += intervals[i].size();
+        left_intervals.emplace_back(intervals[i]);
         // break if interval i+1 is on the right side. An interval i is on the left side if it has less
         // or equal number of elements to its left than to its right, within the gap, and is on the right
         // side otherwise.
@@ -307,35 +309,36 @@ private:
         }
         if (n_left >= intervals[i].size() + intervals[i+1].size()) {
           intervals[i].merge(intervals[i+1]);
-          left_indices.emplace_back(i+1);
-          ++i;
+          ++i;  // skip over i+1
         }
       }
       
-      vector<int> right_indices;
+      vector<interval> right_intervals;
       // rebalance right side intervals
       int n_right = 0;
-      for (int i = intervals.size()-1; i >= 0; --i) {
+      for (int i = (int)intervals.size()-1; i >= 0; --i) {
         n_right += intervals[i].size();
+        right_intervals.emplace_back(intervals[i]);
         // break if interval i-1 is on the left side.
         if (gap_size - intervals[i-1].size() - n_right >= n_right) {
           break;
         }
         if (n_right >= intervals[i].size() + intervals[i-1].size()) {
           intervals[i].merge(intervals[i-1]);
-          right_indices.emplace_back(i-1);
-          --i;
+          --i;  // skip over i-1
         }
       }
+      left_intervals.insert(left_intervals.end(), right_intervals.rbegin(), right_intervals.rend());
+      intervals = left_intervals;
       
-      vector<int> indices_to_remove = left_indices;
+      /*vector<int> indices_to_remove = left_indices;
       indices_to_remove.insert(indices_to_remove.end(), right_indices.rbegin(), right_indices.rend());
       auto new_end = remove_if(intervals.begin(), intervals.end(), index_removal(indices_to_remove));
-      intervals.resize(new_end - intervals.begin());
+      intervals.resize(new_end - intervals.begin());*/
     }
     
     // return the number of elements in this gap.
-    unsigned long size() {
+    unsigned long size() const {
       return gap_size;
     }
     
@@ -366,7 +369,7 @@ public:
       gap& r_gap = gap_ds.successor_or_equal(gap(key));
       r_gap.rebalance();
       bool result = r_gap.membership(key);
-      gap& new_gap = r_gap.restructure(key);
+      gap new_gap = r_gap.restructure(key);
       r_gap.rebalance();
       if (!new_gap.empty()) {
         new_gap.rebalance();
