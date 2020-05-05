@@ -109,14 +109,14 @@ private:
         return false;
       }
       
-      // Pivot so that keys < p go left, >= p go right.
+      // Pivot so that keys <= p go left, > p go right.
       // ideally this could be replaced with in-place pivoting, but since intervals
       // get moved around and must be able to expand, I don't believe this is possible.
       pair<shared_ptr<interval>, shared_ptr<interval>> pivot(const T &p) {
         vector<T> lesser, greater;
         for (vector<T>& vec : elements) {
           for (T e : vec) {
-            if (e < p) {
+            if (e <= p) {
               lesser.emplace_back(e);
             } else {
               greater.emplace_back(e);
@@ -146,7 +146,7 @@ private:
         // TODO: also, I guarantee this can be made faster; investigate.
         shared_ptr<interval> lesser, greater;
         while (true) {
-          T p = pick_pivot(min(5UL, size())); // expected 1.72 iterations of loop
+          T p = pick_pivot(min(5, (int)size())); // expected 1.72 iterations of loop
           auto result_split = pivot(p);
           lesser = result_split.first;
           greater = result_split.second;
@@ -170,7 +170,8 @@ private:
       }
       
       // compare gaps to one another via their maximum element.
-      bool operator < (const interval& other) const {
+      bool operator< (const interval& other) const {
+      //  cout << "here2" << endl;
         return max_e < other.max_e;
       }
       
@@ -201,6 +202,7 @@ private:
       for (shared_ptr<interval> c_int : intervals) {
         gap_size += c_int->size();
       }
+      rebalance();
     }
     
     // returns smallest interval with maximum element larger than or equal to key,
@@ -272,8 +274,9 @@ private:
     }
     
     // compare gaps to one another via their maximum element.
-    bool operator < (const gap& other) const {
-      return intervals.back() < other.intervals.back();
+    bool operator< (const gap& other) const {
+    //  cout << "here" << endl;
+      return *(intervals.back()) < *(other.intervals.back());
     }
     
     // insert key into this gap.
@@ -290,7 +293,7 @@ private:
     
     // restructure the gap so that all elements in gap > key remain in the gap and a new gap
     // is created and returned with elements <= key. TODO: replace with more general function.
-    gap restructure(const T &key) {
+    pair<gap, gap> restructure(const T &key) {
       int int_idx = getIntervalIdx(key);
       auto result = intervals[int_idx]->pivot(key);
       
@@ -305,15 +308,7 @@ private:
         greater.emplace_back(intervals[i]);
       }
       
-      if (greater.empty()) {
-        intervals = lesser;
-        gap_size = total_size(lesser);
-        return gap(greater);  // return empty gap
-      }
-      
-      intervals = greater;
-      gap_size = total_size(greater);
-      return gap(lesser);
+      return make_pair(gap(lesser), gap(greater));
       
       // for the moment, let's ignore the special case. I'm not positive it's necessary for runtime
       // analysis and it certainly doesn't impact correctness.
@@ -341,7 +336,7 @@ private:
       // rebalance left side intervals
       int n_left = 0;
       for (int i = 0; i < intervals.size(); ++i) {
-        int n_right = gap_size - (int)intervals[i]->size() - n_left;
+        int n_right = (int)gap_size - (int)intervals[i]->size() - n_left;
         if (n_left > n_right) {
           last_left_idx = i-1;
           break;
@@ -417,15 +412,30 @@ public:
       gap &r_gap = gap_ds.lower_bound_or_last(gap(key));
     //  r_gap.rebalance();  // I believe I can show the first rebalance is unnecessary.
       bool result = r_gap.membership(key);
-      gap new_gap = r_gap.restructure(key);
-      r_gap.rebalance();
-      if (!new_gap.empty()) {
-        new_gap.rebalance();
-        gap_ds.insert(new_gap);
+      pair<gap, gap> new_gaps = r_gap.restructure(key);
+      gap_ds.erase(r_gap);  // note: this destroys r_gap.
+      if (!new_gaps.first.empty()) {
+        gap_ds.insert(new_gaps.first);
+      }
+      if (!new_gaps.second.empty()) {
+        gap_ds.insert(new_gaps.second);
       }
       
       return result;
     }
+  }
+  
+  void test(T one, T two, T three) {
+    gap one_g(one), two_g(two);
+    
+    cout << (one_g < two_g) << endl;
+    cout << (two_g < one_g) << endl;
+    cout << (one_g < one_g) << endl;
+    
+    splay_tree<gap> st;
+    st.insert(two_g);
+    st.insert(one_g);
+    gap &r_gap = st.lower_bound_or_last(gap(three));
   }
   
   void print() {
