@@ -1,9 +1,12 @@
 // Taken from wikipedia: https://en.wikipedia.org/wiki/Splay_tree
+// Binary search tree invariant is switched: left nodes are greater
+// than key and right nodes are smaller.
 
 #ifndef SPLAY_TREE
 #define SPLAY_TREE
 
 #include <functional>
+#include <iostream>
 
 template<typename T, typename Comp = std::less<T>>
 class splay_tree {
@@ -115,8 +118,15 @@ private:
   // null otherwise.
   node* find(const T &key) {
     node* z = find_or_successor(key);
-    if (z && !comp(z->key, key) && !comp(key, z->key)) z = nullptr;
+    if (!z || comp(z->key, key) || comp(key, z->key)) z = nullptr;
     return z;
+  }
+  
+  void print_tree(node* node) {
+    if (node == nullptr) return;
+    print_tree(node->left);
+    node->key.print();
+    print_tree(node->right);
   }
   
 public:
@@ -174,7 +184,7 @@ public:
   
   // returns the smallest key that compares >= key, or the largest node
   // if no other node exists. Bad things happen if the tree is empty.
-  T& successor_or_equal(const T &key) {
+  T& lower_bound_or_last(const T &key) {
     node *ret = find_or_successor(key);
     return ret->key;
   }
@@ -189,6 +199,12 @@ public:
 
   bool empty( ) const { return root == nullptr; }
   unsigned long size( ) const { return p_size; }
+  
+  void print() {
+    if (!empty()) {
+      print_tree(root);
+    }
+  }
 };
 
 #endif // SPLAY_TREE

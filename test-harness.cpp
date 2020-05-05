@@ -6,10 +6,12 @@ using namespace std;
 
 int main() {
   lazy_search_tree<int> lst;
-  lst.insert(3);
-  lst.insert(7);
-  cout << lst.membership(3) << endl;
+  for (int i = 0; i < 19; ++i) {
+    lst.insert(19-i);
+  }
   cout << lst.membership(6) << endl;
-  cout << lst.membership(7) << endl;
+  lst.print();
+  cout << lst.membership(10) << endl;
+  lst.print();
   cout << "done." << endl;
 }
