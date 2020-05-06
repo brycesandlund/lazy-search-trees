@@ -39,6 +39,7 @@ private:
       // number of pointers in the entire data structure to O(min(n, q log n)).
       list<vector<T>> elements;
       
+    public:
       // returns an element uniformly at random from the interval. Time complexity is no worse
       // than linear in the size of the interval, but typically more like logarithmic. (Can we
       // derive a more rigorous bound here?)
@@ -53,17 +54,6 @@ private:
         return T();
       }
       
-      // pick the pivot element to split the interval. Currently, this picks the median of
-      // three elements sampled uniformly at random.
-      T pick_pivot(int sample_size) {
-        vector<T> pivots(sample_size);
-        for (int i = 0; i < sample_size; ++i)
-          pivots[i] = sample();
-        sort(pivots.begin(), pivots.end());
-        return pivots[sample_size/2];
-      }
-      
-    public:
       // merges 'other' into this interval, destroying 'other'.
       void merge(shared_ptr<interval> other) {
         int_size += other->int_size;
@@ -127,48 +117,6 @@ private:
                          shared_ptr<interval>(new interval(greater)));
       }
       
-      // split this interval, recursing on either the left or right side of the split,
-      // based on the value of "go_left". Return a vector of all resulting intervals,
-      // including this interval.
-      vector<shared_ptr<interval>> split(bool go_left, shared_ptr<interval> this_interval) {
-        // Base case.
-        if (empty()) {
-          return vector<shared_ptr<interval>>();
-        } else if (size() == 1) {
-          vector<shared_ptr<interval>> temp;
-          temp.emplace_back(this_interval);
-          return temp;
-        }
-        
-        // pick a pivot that splits the interval into a constant fraction:
-        // between 1/3 and 2/3 of elements in each resulting split.
-        // TODO: this may not be possible if there are many elements that compare equally; fix.
-        // TODO: also, I guarantee this can be made faster; investigate.
-        shared_ptr<interval> lesser, greater;
-        while (true) {
-          T p = pick_pivot(min(5, (int)size())); // expected 1.72 iterations of loop
-          auto result_split = pivot(p);
-          lesser = result_split.first;
-          greater = result_split.second;
-          if (lesser->size() <= greater->size()*2 && greater->size() <= lesser->size()*2) {
-            break;
-          }
-        }
-        
-        // Recurse.
-        vector<shared_ptr<interval>> result;
-        if (go_left) {
-          result = lesser->split(go_left, lesser);
-          result.emplace_back(greater);
-          return result;
-        } else {
-          result = greater->split(go_left, greater);
-          // O(log^2 |I|), but doesn't matter since we pay |I| to split.
-          result.emplace(result.begin(), lesser);
-          return result;
-        }
-      }
-      
       // compare gaps to one another via their maximum element.
       bool operator< (const interval& other) const {
       //  cout << "here2" << endl;
@@ -198,10 +146,7 @@ private:
     
     // initialize a gap with a vector of intervals.
     gap(vector<shared_ptr<interval>> &intervals) : intervals(intervals) {
-      gap_size = 0;
-      for (shared_ptr<interval> c_int : intervals) {
-        gap_size += c_int->size();
-      }
+      gap_size = subrange_size(0, (int)intervals.size()-1);
       rebalance();
     }
     
@@ -258,12 +203,54 @@ private:
       return left;
     }
     
-    int total_size(vector<shared_ptr<interval>> &vint) {
+    // returns the number of elements in intervals[start_idx : end_idx], inclusive on both ends.
+    int subrange_size(int start_idx, int end_idx) {
       int total = 0;
-      for (shared_ptr<interval> I : vint) {
-        total += I->size();
+      for (int i = start_idx; i <= end_idx; ++i) {
+        total += intervals[i]->size();
       }
+      
       return total;
+    }
+    
+    // pick the pivot element to split the interval.
+    T pick_pivot(int sample_size, shared_ptr<interval> g_int) {
+      vector<T> pivots(sample_size);
+      for (int i = 0; i < sample_size; ++i)
+        pivots[i] = g_int->sample();
+      sort(pivots.begin(), pivots.end());
+      return pivots[sample_size/2];
+    }
+    
+    // split this interval, recursing on either the left or right side of the split,
+    // based on the value of "go_left". Return a vector of all resulting intervals,
+    // including this interval.
+    vector<shared_ptr<interval>> split(shared_ptr<interval> g_int, bool recurse_left) {
+      // Base case.
+      if (g_int->empty()) {
+        return vector<shared_ptr<interval>>();
+      } else if (g_int->size() == 1) {
+        vector<shared_ptr<interval>> temp;
+        temp.emplace_back(g_int);
+        return temp;
+      }
+      
+      T p = g_int->sample();
+      auto result_split = g_int->pivot(p);
+      shared_ptr<interval> lesser = result_split.first;
+      shared_ptr<interval> greater = result_split.second;
+      
+      // Recurse.
+      vector<shared_ptr<interval>> result;
+      if (recurse_left) {
+        result = split(lesser, true);
+        result.emplace_back(greater);
+      } else {
+        result.emplace_back(lesser);
+        vector<shared_ptr<interval>> temp = split(greater, false);
+        result.insert(result.end(), temp.begin(), temp.end());
+      }
+      return result;
     }
     
   public:
@@ -297,8 +284,8 @@ private:
       int int_idx = getIntervalIdx(key);
       auto result = intervals[int_idx]->pivot(key);
       
-      vector<shared_ptr<interval>> left_result = result.first->split(false, result.first);
-      vector<shared_ptr<interval>> greater = result.second->split(true, result.second);
+      vector<shared_ptr<interval>> left_result = split(result.first, false);
+      vector<shared_ptr<interval>> greater = split(result.second, true);
       vector<shared_ptr<interval>> lesser;
       for (int i = 0; i < int_idx; ++i) {
         lesser.emplace_back(intervals[i]);
@@ -309,25 +296,6 @@ private:
       }
       
       return make_pair(gap(lesser), gap(greater));
-      
-      // for the moment, let's ignore the special case. I'm not positive it's necessary for runtime
-      // analysis and it certainly doesn't impact correctness.
-      
-      /*
-      int size_lesser = total_size(lesser);
-      int size_greater = total_size(greater);
-      int larger_size = size_lesser > size_greater ? size_lesser : size_greater;
-      vector<interval>& larger = size_lesser > size_greater ? lesser : greater;
-      */
-      
-      /*
-      int n_left = get_n_left(int_idx);
-      int n_right = size()-n_left-intervals[int_idx].size();
-      
-      // special median case.
-      if (n_left < size()/2 && n_right < size()/2) {
-        
-      }*/
     }
     
     // rebalance according to (A) and (B).
