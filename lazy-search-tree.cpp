@@ -56,6 +56,7 @@ private:
       
       // merges 'other' into this interval, destroying 'other'.
       void merge(shared_ptr<interval> other) {
+        cerr << "merging" << endl;
         int_size += other->int_size;
         max_e = max(max_e, other->max_e);
         
@@ -99,7 +100,7 @@ private:
         return false;
       }
       
-      // Pivot so that keys <= p go left, > p go right.
+      // Pivot so that keys < p go left, > p go right. Equality is split 50-50.
       // ideally this could be replaced with in-place pivoting, but since intervals
       // get moved around and must be able to expand, I don't believe this is possible.
       pair<shared_ptr<interval>, shared_ptr<interval>> pivot(const T &p) {
@@ -125,7 +126,6 @@ private:
       
       // compare gaps to one another via their maximum element.
       bool operator< (const interval& other) const {
-      //  cout << "here2" << endl;
         return max_e < other.max_e;
       }
       
@@ -147,7 +147,6 @@ private:
     int last_left_idx = 0;
     
     // the sorted set of intervals within this gap; all elements in intervals[i] <= intervals[i+1].
-    // consider switching to a vector of pointers to intervals.
     vector<shared_ptr<interval>> intervals;
     
     // initialize a gap with a vector of intervals.
@@ -224,7 +223,7 @@ private:
       return total;
     }
     
-    // pick the pivot element to split the interval.
+    // pick the pivot element to split the interval. Currently unused.
     T pick_pivot(int sample_size, shared_ptr<interval> g_int) {
       vector<T> pivots(sample_size);
       for (int i = 0; i < sample_size; ++i)
@@ -233,14 +232,11 @@ private:
       return pivots[sample_size/2];
     }
     
-    // split this interval, recursing on either the left or right side of the split,
-    // based on the value of "go_left". Return a vector of all resulting intervals,
-    // including this interval.
+    // split interval g_int, recursing on either the left or right side of the split,
+    // based on the value of "recurse_left". Return a vector of all resulting intervals.
     vector<shared_ptr<interval>> split(shared_ptr<interval> g_int, bool recurse_left) {
       // Base case.
-      if (g_int->empty()) {
-        return vector<shared_ptr<interval>>();
-      } else if (g_int->size() == 1) {
+      if (g_int->size() <= 1) {
         vector<shared_ptr<interval>> temp;
         temp.emplace_back(g_int);
         return temp;
@@ -273,7 +269,6 @@ private:
     
     // compare gaps to one another via their maximum element.
     bool operator< (const gap& other) const {
-    //  cout << "here" << endl;
       return *(intervals.back()) < *(other.intervals.back());
     }
     
