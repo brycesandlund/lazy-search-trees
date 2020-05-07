@@ -1,6 +1,4 @@
 // Taken from wikipedia: https://en.wikipedia.org/wiki/Splay_tree
-// Binary search tree invariant is switched: left nodes are greater
-// than key and right nodes are smaller.
 
 #ifndef SPLAY_TREE
 #define SPLAY_TREE

@@ -14,8 +14,8 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "380"
-            endingLineNumber = "380"
+            startingLineNumber = "393"
+            endingLineNumber = "393"
             landmarkName = "membership(key)"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "382"
-            endingLineNumber = "382"
+            startingLineNumber = "395"
+            endingLineNumber = "395"
             landmarkName = "membership(key)"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,8 +46,8 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "266"
-            endingLineNumber = "266"
+            startingLineNumber = "277"
+            endingLineNumber = "277"
             landmarkName = "operator&lt;(other)"
             landmarkType = "7">
          </BreakpointContent>
@@ -62,10 +62,58 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "407"
-            endingLineNumber = "407"
+            startingLineNumber = "420"
+            endingLineNumber = "420"
             landmarkName = "test(one, two, three)"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "42AA81A6-FC2D-43FD-8FAF-CBADF6D27F3C"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../lazy-search-tree.cpp"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "155"
+            endingLineNumber = "155"
+            landmarkName = "gap(intervals)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "42AA81A6-FC2D-43FD-8FAF-CBADF6D27F3C - da934227ef1ef4cc"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "lazy_search_tree&lt;int, std::__1::less&lt;int&gt; &gt;::gap::gap(std::__1::vector&lt;std::__1::shared_ptr&lt;lazy_search_tree&lt;int, std::__1::less&lt;int&gt; &gt;::gap::interval&gt;, std::__1::allocator&lt;std::__1::shared_ptr&lt;lazy_search_tree&lt;int, std::__1::less&lt;int&gt; &gt;::gap::interval&gt; &gt; &gt;&amp;)"
+                  moduleName = "LazySearchTrees"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brycesandlund/GitHub/lazy-search-trees/lazy-search-tree.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "149"
+                  endingLineNumber = "149"
+                  offsetFromSymbolStart = "50">
+               </Location>
+               <Location
+                  uuid = "42AA81A6-FC2D-43FD-8FAF-CBADF6D27F3C - da934227ef1ef4cc"
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "lazy_search_tree&lt;int, std::__1::less&lt;int&gt; &gt;::gap::gap(std::__1::vector&lt;std::__1::shared_ptr&lt;lazy_search_tree&lt;int, std::__1::less&lt;int&gt; &gt;::gap::interval&gt;, std::__1::allocator&lt;std::__1::shared_ptr&lt;lazy_search_tree&lt;int, std::__1::less&lt;int&gt; &gt;::gap::interval&gt; &gt; &gt;&amp;)"
+                  moduleName = "LazySearchTrees"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brycesandlund/GitHub/lazy-search-trees/lazy-search-tree.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "149"
+                  endingLineNumber = "149"
+                  offsetFromSymbolStart = "114">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

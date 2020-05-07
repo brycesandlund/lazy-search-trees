@@ -106,10 +106,16 @@ private:
         vector<T> lesser, greater;
         for (vector<T>& vec : elements) {
           for (T e : vec) {
-            if (e <= p) {
+            if (e < p) {
               lesser.emplace_back(e);
-            } else {
+            } else if (e > p) {
               greater.emplace_back(e);
+            } else {
+              if (rand()%2 == 0) {
+                lesser.emplace_back(e);
+              } else {
+                greater.emplace_back(e);
+              }
             }
           }
         }
@@ -145,8 +151,13 @@ private:
     vector<shared_ptr<interval>> intervals;
     
     // initialize a gap with a vector of intervals.
-    gap(vector<shared_ptr<interval>> &intervals) : intervals(intervals) {
-      gap_size = subrange_size(0, (int)intervals.size()-1);
+    gap(vector<shared_ptr<interval>> &intervals) {
+      for (shared_ptr<interval> g_int : intervals) {
+        if (!g_int->empty()) {
+          this->intervals.emplace_back(g_int);
+        }
+      }
+      gap_size = subrange_size(0, (int)this->intervals.size()-1);
       rebalance();
     }
     
@@ -295,6 +306,8 @@ private:
         greater.emplace_back(intervals[i]);
       }
       
+      // for many reasons, the intervals of lesser or greater may be empty.
+      // The gap constructor will keep only non-empty intervals.
       return make_pair(gap(lesser), gap(greater));
     }
     
