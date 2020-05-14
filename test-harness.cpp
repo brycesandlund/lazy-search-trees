@@ -24,4 +24,5 @@ int main() {
       cerr << "Error!: " << item << endl;
     }
   }
+  cout << "done" << endl;
 }

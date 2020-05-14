@@ -144,19 +144,26 @@ private:
     };  // end interval class
     
     unsigned long gap_size;
-    int last_left_idx = 0;
     
-    // the sorted set of intervals within this gap; all elements in intervals[i] <= intervals[i+1].
-    vector<shared_ptr<interval>> intervals;
+    // intervals in this gap. Intervals are explicitly organized into
+    // left and right sides.
+    vector<shared_ptr<interval>> left_intervals;
+    vector<shared_ptr<interval>> right_intervals;
     
-    // initialize a gap with a vector of intervals.
-    gap(vector<shared_ptr<interval>> &intervals) {
-      for (shared_ptr<interval> g_int : intervals) {
+    void add_intervals(vector<shared_ptr<interval>> &from, vector<shared_ptr<interval>> &to) {
+      for (shared_ptr<interval> g_int : from) {
         if (!g_int->empty()) {
-          this->intervals.emplace_back(g_int);
+          to.emplace_back(g_int);
         }
       }
-      gap_size = subrange_size(0, (int)this->intervals.size()-1);
+    }
+    
+    // initialize a gap with a vector of intervals.
+    gap(vector<shared_ptr<interval>> &left_intervals, vector<shared_ptr<interval>> &right_intervals) {
+      add_intervals(left_intervals, this->left_intervals);
+      add_intervals(right_intervals, this->right_intervals);
+      gap_size = subrange_size(this->left_intervals.begin(), this->left_intervals.end()) +
+                  subrange_size(this->right_intervals.begin(), this->right_intervals.end());
       rebalance();
     }
     
@@ -213,11 +220,12 @@ private:
       return left;
     }
     
-    // returns the number of elements in intervals[start_idx : end_idx], inclusive on both ends.
-    int subrange_size(int start_idx, int end_idx) {
+    // returns the number of elements in range indicated by parameter iterators.
+    template <typename Iterator>
+    int subrange_size(Iterator start, Iterator end) {
       int total = 0;
-      for (int i = start_idx; i <= end_idx; ++i) {
-        total += intervals[i]->size();
+      for (Iterator it = start; it != end; ++it) {
+        total += (*it)->size();
       }
       
       return total;
@@ -258,11 +266,6 @@ private:
         result.insert(result.end(), temp.begin(), temp.end());
       }
       return result;
-    }
-    
-    void simple_delete(list<shared_ptr<interval>> &intervals_list,
-                       typename list<shared_ptr<interval>>::iterator it) {
-      intervals_list.erase(it);
     }
     
   public:
@@ -311,43 +314,73 @@ private:
       return make_pair(gap(lesser), gap(greater));
     }
     
-    template <typename Iterator, typename f>
-    int perform_merges(Iterator begin,
+    template <typename Iterator>
+    void perform_merges(Iterator begin,
                         Iterator end,
-                        f deletion) {
+                        list<shared_ptr<interval>> &intervals_list) {
       int n_out = 0;
-      int i = 0;
-      for (auto it = begin; it != end; ++it, ++i) {
+      for (auto it = begin; it != end;) {
         int cur_size = (int)(*it)->size();
         int n_in = (int)gap_size - cur_size - n_out;
         if (n_out > n_in) {
-          return i-1;
+          break;
         }
         auto it2 = it;
         ++it2;
         if (it2 != end && n_out >= cur_size + (int)(*it2)->size()) {
           (*it)->merge(*it2);
           n_out += (int)(*it)->size(); // it now has contribution of it2 added to its size
-          deletion(it2);
+          intervals_list.erase(it2);
+          ++it;
         } else {
           n_out += cur_size;
+          ++it;
         }
       }
-      return i-1;
     }
     
-    // rebalance according to (A) and (B). Precondition: no interval is empty.
+    // rebalance according to (A) and (B).
     void rebalance() {
       list<shared_ptr<interval>> intervals_list(intervals.begin(), intervals.end());
-      last_left_idx = perform_merges(intervals_list.begin(), intervals_list.end(),
-                     [&intervals_list](typename list<shared_ptr<interval>>::iterator it){
-        intervals_list.erase(it);
-      });
-      perform_merges(intervals_list.rbegin(), intervals_list.rend(),
-                   [&intervals_list](typename list<shared_ptr<interval>>::reverse_iterator it){
-        intervals_list.erase(next(it).base());
-      });
-      intervals = vector<shared_ptr<interval>>(intervals_list.begin(), intervals_list.end());
+      
+      perform_merges(intervals_list.begin(), intervals_list.end(), intervals_list);
+      perform_merges(intervals_list.rbegin(), intervals_list.rend(), intervals_list);
+      
+    /*  vector<shared_ptr<interval>> left_intervals;
+      // rebalance left side intervals
+      int n_left = 0;
+      for (int i = 0; i < intervals.size(); ++i) {
+        int n_right = (int)gap_size - (int)intervals[i]->size() - n_left;
+        if (n_left > n_right) {
+          last_left_idx = i-1;
+          break;
+        }
+        
+        left_intervals.emplace_back(intervals[i]);
+        if (i+1 < intervals.size() && n_left >= intervals[i]->size() + intervals[i+1]->size()) {
+          intervals[i]->merge(intervals[i+1]);
+          n_left += intervals[i]->size();
+          ++i;  // skip over i+1
+        } else {
+          n_left += intervals[i]->size();
+        }
+      }
+      
+      vector<shared_ptr<interval>> right_intervals;
+      int n_right = 0;
+      for (int i = (int)intervals.size()-1; i > last_left_idx; --i) {
+        right_intervals.emplace_back(intervals[i]);
+        if (i > last_left_idx && n_right >= intervals[i]->size() + intervals[i-1]->size()) {
+          intervals[i]->merge(intervals[i-1]);
+          n_right += intervals[i]->size();
+          --i;  // skip over i-1
+        } else {
+          n_right += intervals[i]->size();
+        }
+      }
+      
+      left_intervals.insert(left_intervals.end(), right_intervals.rbegin(), right_intervals.rend());
+      intervals = left_intervals; // will effectively destroy the intervals that were merged (which now hold no elements)*/
     }
     
     // return the number of elements in this gap.
