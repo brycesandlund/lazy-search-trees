@@ -64,6 +64,7 @@ private:
         // is, if other is a left side interval, do as below, otherwise, add the elements to the
         // beginning, not end.
         elements.splice(elements.end(), other->elements);
+        other->int_size = 0;  // shouldn't matter but doing it anyway.
       }
       
       // insert an element into this interval.
@@ -106,7 +107,7 @@ private:
       pair<shared_ptr<interval>, shared_ptr<interval>> pivot(const T &p) {
         vector<T> lesser, greater;
         for (vector<T>& vec : elements) {
-          for (T e : vec) {
+          for (T& e : vec) {
             if (e < p) {
               lesser.emplace_back(e);
             } else if (e > p) {
@@ -151,12 +152,13 @@ private:
     
     // initialize a gap with a vector of intervals.
     gap(vector<shared_ptr<interval>> &intervals) {
+      gap_size = 0;
       for (shared_ptr<interval> g_int : intervals) {
         if (!g_int->empty()) {
           this->intervals.emplace_back(g_int);
+          gap_size += g_int->size();
         }
       }
-      gap_size = subrange_size(0, (int)this->intervals.size()-1);
       rebalance();
     }
     
@@ -205,38 +207,40 @@ private:
     
     // returns the number of elements left of this interval. Note: runs in O(number of intervals)
     // time, not O(log(number of intervals)), thus should only be used on query.
-    int get_n_left(int int_idx) {
+ /*   int get_n_left(int int_idx) {
       int left = 0;
       for (int i = 0; i < int_idx; ++i) {
         left += intervals[i]->size();
       }
       return left;
-    }
+    }*/
     
     // returns the number of elements in intervals[start_idx : end_idx], inclusive on both ends.
-    int subrange_size(int start_idx, int end_idx) {
+ /*   int subrange_size(int start_idx, int end_idx) {
       int total = 0;
       for (int i = start_idx; i <= end_idx; ++i) {
         total += intervals[i]->size();
       }
       
       return total;
-    }
+    }*/
     
     // pick the pivot element to split the interval. Currently unused.
-    T pick_pivot(int sample_size, shared_ptr<interval> g_int) {
+  /*  T pick_pivot(int sample_size, shared_ptr<interval> g_int) {
       vector<T> pivots(sample_size);
       for (int i = 0; i < sample_size; ++i)
         pivots[i] = g_int->sample();
       sort(pivots.begin(), pivots.end());
       return pivots[sample_size/2];
-    }
+    }*/
     
     // split interval g_int, recursing on either the left or right side of the split,
     // based on the value of "recurse_left". Return a vector of all resulting intervals.
     vector<shared_ptr<interval>> split(shared_ptr<interval> g_int, bool recurse_left) {
       // Base case.
-      if (g_int->size() <= 1) {
+      if (g_int->empty()) {
+        return vector<shared_ptr<interval>>();
+      } else if (g_int->size() == 1) {
         vector<shared_ptr<interval>> temp;
         temp.emplace_back(g_int);
         return temp;
@@ -258,11 +262,6 @@ private:
         result.insert(result.end(), temp.begin(), temp.end());
       }
       return result;
-    }
-    
-    void simple_delete(list<shared_ptr<interval>> &intervals_list,
-                       typename list<shared_ptr<interval>>::iterator it) {
-      intervals_list.erase(it);
     }
     
   public:
@@ -317,23 +316,28 @@ private:
                         f deletion) {
       int n_out = 0;
       int i = 0;
-      for (auto it = begin; it != end; ++it, ++i) {
-        int cur_size = (int)(*it)->size();
-        int n_in = (int)gap_size - cur_size - n_out;
-        if (n_out > n_in) {
-          return i-1;
-        }
+      auto it = begin;
+      for (;;) {
         auto it2 = it;
         ++it2;
-        if (it2 != end && n_out >= cur_size + (int)(*it2)->size()) {
+        if (it2 == end) break;
+        int cur_size = (int)(*it)->size();
+        int next_size = (int)(*it2)->size();
+        int n_in = (int)size() - cur_size - n_out;
+        if (n_out + cur_size >= n_in - next_size) {  // it2 is on the other side
+          return i;
+        }
+        
+        if (n_out >= cur_size + next_size) {
           (*it)->merge(*it2);
-          n_out += (int)(*it)->size(); // it now has contribution of it2 added to its size
           deletion(it2);
         } else {
           n_out += cur_size;
+          ++it;
+          ++i;
         }
       }
-      return i-1;
+      return i;
     }
     
     // rebalance according to (A) and (B). Precondition: no interval is empty.
@@ -404,19 +408,6 @@ public:
       
       return result;
     }
-  }
-  
-  void test(T one, T two, T three) {
-    gap one_g(one), two_g(two);
-    
-    cout << (one_g < two_g) << endl;
-    cout << (two_g < one_g) << endl;
-    cout << (one_g < one_g) << endl;
-    
-    splay_tree<gap> st;
-    st.insert(two_g);
-    st.insert(one_g);
-    gap &r_gap = st.lower_bound_or_last(gap(three));
   }
   
   void print() {
