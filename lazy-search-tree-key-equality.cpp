@@ -3,11 +3,7 @@
 // and a linked list of vectors is the data structure for the intervals, which allows O(1) time
 // merge, insert, and delete, while maintaining the O(min(n, q log n)) pointer bound.
 
-// Currently assumes inserted elements are unique. The only part that requires this is the splay
-// tree. It compares based on the maximum element in a gap. If there's a gap with all x, and
-// another gap with keys [<x, x], the splay tree doesn't put the gaps in the correct order.
-// Fixing it requires updating the comparison function, but this requires care to return the
-// correct element on membership queries. At the moment it's okay that this requires unique elements.
+// Currently seems to assume elements inserted are unique.
 
 #ifndef LAZY_SEARCH_TREE
 #define LAZY_SEARCH_TREE
@@ -36,6 +32,7 @@ private:
     class interval {
     private:
       T max_e;
+      T min_e;
       unsigned long int_size;
       
       // intervals require a linked list data structure for O(1) merging, but by using a linked list of
@@ -63,6 +60,7 @@ private:
         cerr << "merging" << endl;
         int_size += other->int_size;
         max_e = max(max_e, other->max_e);
+        min_e = min(min_e, other->min_e);
         
         // may want to make this conditional so that the interval is loosely structured in order, that
         // is, if other is a left side interval, do as below, otherwise, add the elements to the
@@ -76,6 +74,7 @@ private:
         elements.front().emplace_back(element); // doesn't actually matter which vector the element
                                                 // is placed into.
         max_e = max(max_e, element);
+        min_e = min(min_e, element);
         ++int_size;
       }
       
@@ -85,6 +84,7 @@ private:
         if (!starting_elements.empty()) {
           elements.emplace_back(starting_elements);
           max_e = *max_element(starting_elements.begin(), starting_elements.end());
+          min_e = *min_element(starting_elements.begin(), starting_elements.end());
         }
       }
       
@@ -93,6 +93,7 @@ private:
         int_size = 1;
         elements.emplace_back(vector<T>({element}));
         max_e = element;
+        min_e = element;
       }
       
       // linearly scan the interval to determine if the key is present.
@@ -129,10 +130,10 @@ private:
                          shared_ptr<interval>(new interval(greater)));
       }
       
-      // compare gaps to one another via their maximum element.
+   /*   // compare gaps to one another via their maximum element.
       bool operator< (const interval& other) const {
         return max_e < other.max_e;
-      }
+      }*/
       
       // return the number of elements in this interval.
       unsigned long size() const {
@@ -142,6 +143,11 @@ private:
       // get max element. Undefined behavior if interval is empty.
       T get_max() {
         return max_e;
+      }
+      
+      // get min element. Undefined behavior if interval is empty.
+      T get_min() {
+        return min_e;
       }
       
       // return if this interval is empty.
@@ -277,7 +283,13 @@ private:
     
     // compare gaps to one another via their maximum element.
     bool operator< (const gap& other) const {
-      return *(intervals.back()) < *(other.intervals.back());
+      if (intervals.back()->get_max() < other.intervals.back()->get_max()) {
+        return true;
+      } else if (!(other.intervals.back()->get_max() < intervals.back()->get_max())) {  // back elements are equal
+        return intervals.front()->get_min() < other.intervals.front()->get_min();
+      } else {
+        return false;
+      }
     }
     
     // insert key into this gap.
@@ -384,6 +396,7 @@ public:
   void insert(const T &key) {
     if (empty()) {
       gap r_gap = gap(key);
+      
       gap_ds.insert(r_gap);
     } else {
       gap& r_gap = gap_ds.lower_bound_or_last(gap(key));

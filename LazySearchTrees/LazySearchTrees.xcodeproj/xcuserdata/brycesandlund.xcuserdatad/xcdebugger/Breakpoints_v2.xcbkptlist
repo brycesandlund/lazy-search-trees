@@ -14,9 +14,9 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "168"
-            endingLineNumber = "168"
-            landmarkName = "getIntervalIdx(key)"
+            startingLineNumber = "162"
+            endingLineNumber = "162"
+            landmarkName = "gap(intervals)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -30,9 +30,9 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "345"
-            endingLineNumber = "345"
-            landmarkName = "rebalance()"
+            startingLineNumber = "333"
+            endingLineNumber = "333"
+            landmarkName = "perform_merges(begin, end, deletion)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -46,9 +46,9 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "354"
-            endingLineNumber = "354"
-            landmarkName = "rebalance()"
+            startingLineNumber = "342"
+            endingLineNumber = "342"
+            landmarkName = "perform_merges(begin, end, deletion)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -62,8 +62,8 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "60"
-            endingLineNumber = "60"
+            startingLineNumber = "63"
+            endingLineNumber = "63"
             landmarkName = "merge(other)"
             landmarkType = "7">
          </BreakpointContent>
@@ -78,8 +78,8 @@
             filePath = "../lazy-search-tree.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "68"
-            endingLineNumber = "68"
+            startingLineNumber = "70"
+            endingLineNumber = "70"
             landmarkName = "merge(other)"
             landmarkType = "7">
          </BreakpointContent>
@@ -87,16 +87,64 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "9E060236-2244-4ABD-987C-E385CE44BA45"
+            uuid = "B3EE3794-84DD-473A-A4BC-82194BD1F9DD"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../test-harness.cpp"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "31"
-            endingLineNumber = "31"
-            landmarkName = "main()"
+            startingLineNumber = "42"
+            endingLineNumber = "42"
+            landmarkName = "correctness()"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  uuid = "B3EE3794-84DD-473A-A4BC-82194BD1F9DD - c4848b4668e43931"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "correctness()"
+                  moduleName = "LazySearchTrees"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brycesandlund/GitHub/lazy-search-trees/test-harness.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "47"
+                  endingLineNumber = "47"
+                  offsetFromSymbolStart = "335">
+               </Location>
+               <Location
+                  uuid = "B3EE3794-84DD-473A-A4BC-82194BD1F9DD - c4848b4668e43931"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "correctness()"
+                  moduleName = "LazySearchTrees"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/brycesandlund/GitHub/lazy-search-trees/test-harness.cpp"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "47"
+                  endingLineNumber = "47"
+                  offsetFromSymbolStart = "344">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0C5D3032-C49B-48AF-A990-241F0796FF7D"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../test-harness.cpp"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "27"
+            endingLineNumber = "27"
+            landmarkName = "correctness()"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
