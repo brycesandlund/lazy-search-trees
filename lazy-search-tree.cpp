@@ -1,7 +1,7 @@
 // An implementation of the lazy search tree data structure, from the paper "Lazy Search Trees"
 // by Bryce Sandlund and Sebastian Wild. A splay tree is used as the data structure for the gaps
 // and a linked list of vectors is the data structure for the intervals, which allows O(1) time
-// merge, insert, and delete, while maintaining the O(min(n, q log n)) pointer bound.
+// merge, insert, and delete while maintaining the O(min(n, q log n)) pointer bound.
 
 // Currently assumes inserted elements are unique. The only part that requires this is the splay
 // tree. It compares based on the maximum element in a gap. If there's a gap with all x, and
@@ -60,7 +60,6 @@ private:
       
       // merges 'other' into this interval, destroying 'other'.
       void merge(shared_ptr<interval> other) {
-        cerr << "merging" << endl;
         int_size += other->int_size;
         max_e = max(max_e, other->max_e);
         
@@ -168,6 +167,7 @@ private:
     
     // returns smallest interval with maximum element larger than or equal to key,
     // or the last interval if key is the maximum amongst all elements.
+    // Optimized to provide O(1) average case insert, O(log log Delta_i) worst-case.
     int getIntervalIdx(const T &key) {
       int lo = last_left_idx, hi, mult;
       bool init = key <= intervals[last_left_idx]->get_max();
@@ -380,6 +380,10 @@ private:
 public:
   lazy_search_tree() : lst_size(0) {}
   
+  void push(const T &key) {
+    insert(key);
+  }
+  
   // insert key into the lazy search tree.
   void insert(const T &key) {
     if (empty()) {
@@ -394,7 +398,7 @@ public:
   
   // return if key is present in the lazy search tree and restructure
   // according to the new query.
-  bool membership(const T &key) {
+  int count(const T &key) {
     if (empty()) {
       return false;
     } else {

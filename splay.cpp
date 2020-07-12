@@ -173,7 +173,7 @@ public:
     p_size--;
   }
 
-  bool membership(const T &key) {
+  bool count(const T &key) {
     node *z = find(key);
     if (!z) return false;
 
