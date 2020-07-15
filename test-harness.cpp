@@ -5,6 +5,8 @@
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <random>
+#include <chrono>
 
 using namespace std;
 
@@ -58,7 +60,7 @@ void uniform_speed(int n, int q, container c) {
   for (int i = 0; i < n; ++i) {
     keys[i] = i;
   }
-  random_shuffle(keys.begin(), keys.end());
+  shuffle(keys.begin(), keys.end(), default_random_engine(0));
   cout << "Begin test" << endl;
   for (int i = 0; i < n; ++i) {
     c.insert(keys[i]);
@@ -78,18 +80,31 @@ void clustered_speed(int n, int q, int k, container c) {
   for (int i = 0; i < n; ++i) {
     keys[i] = i;
   }
-  random_shuffle(keys.begin(), keys.end());
+  default_random_engine gen(0);
+  shuffle(keys.begin(), keys.end(), gen);
+/*  for (int i = 0; i < n; ++i) {
+    cerr << keys[i] << " ";
+  }
+  cerr << endl;*/
+  
+  uniform_int_distribution<int> query(0, n-1);
+  uniform_int_distribution<int> start(0, n-k);
   cout << "Begin test" << endl;
+  auto t1 = chrono::high_resolution_clock::now();
   for (int i = 0; i < n; ++i) {
     c.insert(keys[i]);
-    if (rand()%n < q/k) {
-      int start = rand()%(n-k+1);
+    if (query(gen) < q/k) {
+      int st = start(gen);
+   //   cerr << st << endl;
       for (int j = 0; j < k; ++j) {
-        c.count(start+j);
+        c.count(st+j);
       }
     }
   }
+  auto t2 = chrono::high_resolution_clock::now();
   cout << "Test Complete" << endl;
+  auto duration = chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+  cout << "Time: " << duration << endl;
 }
 
 // priority queue test of library PQ, insertions uniformly distributed, insertions
@@ -135,7 +150,8 @@ void insert_time_test(container c, long long bound) {
 
 
 int main(int argc, char *argv[]) {
-  int n = 100000000;
+  srand(0);
+/*  int n = 100000000;
   int q = 100;
   int k = 1;
   cout << "PQ insert first test n: " << n << " q:" << q << endl;
@@ -145,20 +161,27 @@ int main(int argc, char *argv[]) {
   } else {
     cout << "Time LST" << endl;
     pq_speed(n, q);
-  }
-/*  lazy_search_tree<int> lst;
-  set<int> bst;
+  }*/
   int n = 10000000;
-  int q = 1000;
+  int q = 20000;
   int k = 1;
+  
   cout << "Clustered test n: " << n << " q:" << q << " k:" << k << endl;
   if (argv[1][0] == 'B') {
-    cout << "Time BST" << endl;
+    cout << "Time c++ set" << endl;
+    set<int> bst;
     clustered_speed(n, q, k, bst);
-  } else {
+  } else if (argv[1][0] == 'S') {
+    cout << "Time splay tree" << endl;
+    splay_tree<int> stree;
+    clustered_speed(n, q, k, stree);
+  } else if (argv[1][0] == 'L'){
     cout << "Time LST" << endl;
+    lazy_search_tree<int> lst;
     clustered_speed(n, q, k, lst);
-  }*/
+  } else {
+    cout << "Argument not recognized" << endl;
+  }
 /*  cout << "Uniform test n: " << n << " q:" << q << endl;
   if (argv[1][0] == 'B') {
     cout << "Time BST" << endl;

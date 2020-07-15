@@ -1,4 +1,5 @@
 // Taken from wikipedia: https://en.wikipedia.org/wiki/Splay_tree
+// Leaks memory. Never calls delete despite using new.
 
 #ifndef SPLAY_TREE
 #define SPLAY_TREE
