@@ -12,6 +12,8 @@
 #ifndef LAZY_SEARCH_TREE
 #define LAZY_SEARCH_TREE
 
+#define INF 1000000000
+
 #include "splay.cpp"
 #include <vector>
 #include <list>
@@ -240,13 +242,11 @@ private:
     
     // split interval g_int, recursing on either the left or right side of the split,
     // based on the value of "recurse_left". Return a vector of all resulting intervals.
-    vector<shared_ptr<interval>> split(shared_ptr<interval> g_int, bool recurse_left) {
+    vector<shared_ptr<interval>> split(shared_ptr<interval> g_int, bool recurse_left, int n_recursions) {
       // Base case.
-      if (g_int->empty()) {
-        return vector<shared_ptr<interval>>();
-      } else if (g_int->size() == 1) {
+      if (n_recursions == 0 || g_int->size() <= 1) {
         vector<shared_ptr<interval>> temp;
-        temp.emplace_back(g_int);
+        temp.emplace_back(g_int); // may be emplacing an empty interval. That is okay.
         return temp;
       }
       
@@ -258,11 +258,11 @@ private:
       // Recurse.
       vector<shared_ptr<interval>> result;
       if (recurse_left) {
-        result = split(lesser, true);
+        result = split(lesser, true, n_recursions-1);
         result.emplace_back(greater);
       } else {
         result.emplace_back(lesser);
-        vector<shared_ptr<interval>> temp = split(greater, false);
+        vector<shared_ptr<interval>> temp = split(greater, false, n_recursions-1);
         result.insert(result.end(), temp.begin(), temp.end());
       }
       return result;
@@ -294,12 +294,12 @@ private:
     
     // restructure the gap so that all elements in gap > key remain in the gap and a new gap
     // is created and returned with elements <= key. TODO: replace with more general function.
-    pair<gap, gap> restructure(const T &key) {
+    pair<gap, gap> restructure(const T &key, int n_recursions) {
       int int_idx = getIntervalIdx(key);
       auto result = intervals[int_idx]->pivot(key);
       
-      vector<shared_ptr<interval>> left_result = split(result.first, false);
-      vector<shared_ptr<interval>> greater = split(result.second, true);
+      vector<shared_ptr<interval>> left_result = split(result.first, false, n_recursions);
+      vector<shared_ptr<interval>> greater = split(result.second, true, n_recursions);
       vector<shared_ptr<interval>> lesser;
       for (int i = 0; i < int_idx; ++i) {
         lesser.emplace_back(intervals[i]);
@@ -403,9 +403,12 @@ public:
       return false;
     } else {
       gap &r_gap = gap_ds.lower_bound_or_last(gap(key));
-    //  r_gap.rebalance();  // I believe I can show the first rebalance is unnecessary.
+    //  r_gap.rebalance();  // First rebalance is unnecessary.
       bool result = r_gap.membership(key);
-      pair<gap, gap> new_gaps = r_gap.restructure(key);
+      pair<gap, gap> new_gaps = r_gap.restructure(key, 2); // r_gap.restructure(key, INF);
+                                                           // INF will recurse
+                                                           // until intervals of size 1 are created,
+                                                           // the original algorithm.
       gap_ds.erase(r_gap);  // note: this destroys r_gap.
       if (!new_gaps.first.empty()) {
         gap_ds.insert(new_gaps.first);

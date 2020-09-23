@@ -163,11 +163,14 @@ int main(int argc, char *argv[]) {
     pq_speed(n, q);
   }*/
   int n = 10000000;
-  int q = 20000;
+  int q = 25000;
   int k = 1;
   
   cout << "Clustered test n: " << n << " q:" << q << " k:" << k << endl;
-  if (argv[1][0] == 'B') {
+  if (argc != 2) {
+    cout << "Error, Usage: \"./test-harness L\", where L can be B, S, or L" << endl;
+  }
+  else if (argv[1][0] == 'B') {
     cout << "Time c++ set" << endl;
     set<int> bst;
     clustered_speed(n, q, k, bst);
